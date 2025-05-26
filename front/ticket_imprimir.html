@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>DELISH - Ticket</title>
+    <!-- Icon    -->
+    <link rel="icon" href="assets/img/icon/Ico_Third_Logo.ico" type="image/png">
+    <style>
+        body {
+            font-family: 'Arial Narrow', sans-serif;
+            width: 80mm;
+            /* Ancho para impresoras térmicas */
+            margin: 0;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .ticket {
+            border: 1px dashed #ccc;
+            /* Solo para visualización en navegador */
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+
+        .total {
+            font-weight: bold;
+            border-top: 1px solid #000;
+            margin-top: 5px;
+            padding-top: 5px;
+        }
+
+        .no-print {
+            margin-top: 20px;
+            padding: 15px 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            border-radius: 5px;
+        }
+
+        .ticket-header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .ticket-footer {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .copy-label {
+            font-weight: bold;
+            text-align: center;
+            margin: 5px 0;
+            font-size: 12px;
+            color: #555;
+        }
+
+        /* Estilos solo para impresión */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .ticket {
+                border: none !important;
+                margin-bottom: 0 !important;
+                page-break-after: avoid;
+            }
+
+            body {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .copy-label {
+                color: #000 !important;
+            }
+
+            #tickets-container {
+                page-break-inside: avoid;
+            }
+        }
+
+        .back-to-home-btn {
+            background-color: #e63946;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-to-home-btn:hover {
+            background-color: #911421;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="tickets-container">
+        <p>Cargando último ticket...</p>
+    </div>
+
+    <button class="no-print" onclick="imprimirTicket()">
+        Imprimir Ticket
+    </button>
+
+    <a href="index.html" class="back-to-home-btn no-print">Volver al Inicio</a>
+
+    <script>
+        // URL base de tu API
+        const API_BASE_URL = 'http://127.0.0.1:8000';  // Cambia esto en producción
+
+        async function obtenerUltimoTicket() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/ticket/ultimo/imprimir`);
+
+                if (!response.ok) {
+                    throw new Error(`Error al obtener ticket: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                return {
+                    error: true,
+                    message: 'No se pudo cargar el último ticket'
+                };
+            }
+        }
+        const productos = {
+            1: "Pollo Frito",
+            2: "Hamburguesa Clásica",
+            3: "Tacos al Pastor",
+            4: "Coca-Cola",
+            5: "Agua Mineral",
+            6: "Jugo Natural",
+            7: "Papas Fritas",
+            8: "Salsa Extra",
+            9: "Queso Extra",
+            10: "Presa de Pollo - Entrepierna",
+            11: "Porcion de papa",
+            12: "Salsa Extra - barbacoa",
+            13: "Salsa Extra - Golf",
+            14: "Salsa Extra - Picante",
+            15: "COCA-COLA SIN AZUCAR 300 ml",
+            16: "FANTA NARANJA 300 ml",
+            17: "FANTA PAPAYA 300ML",
+            18: "FANTA GUARANA 300ML",
+            19: "SPRITE 300ML",
+            20: "DEL VALLE DURAZNO 300ML",
+            21: "COCA-COLA 500ML",
+            22: "COCA-COLA SIN AZUCAR 500ML",
+            23: "FANTA NARANJA 500ML",
+            24: "FANTA LIMON 500ML",
+            25: "FANTA PAPAYA 500ML NR",
+            26: "SPRITE 500ML",
+            27: "SPRITE SIN AZUCAR 500ML",
+            28: "DEL VALLE FRESH 500 NARANJA",
+            29: "VITAL 600 ML",
+            30: "DV DURAZNO 1000 TETRA PACK",
+            31: "DV MANZANA 1000 TETRA PACK",
+            32: "COCA-COLA 2.0L",
+            33: "COCA-COLA SIN AZUCAR 2.0L",
+            34: "FANTA NARANJA 2.0L",
+            35: "FANTA PAPAYA 2.0L",
+            36: "FANTA GUARANA 2.0L",
+            37: "SPRITE 2.0L",
+            38: "DEL VALLE DURAZNO 2.0L",
+            39: "DEL VALLE MANZANA 2.0L",
+            40: "DV FRESH 2000 NARANJA",
+        };
+        function crearTicket(datos, copyType) {
+            const ticketDiv = document.createElement('div');
+            ticketDiv.className = 'ticket';
+
+            if (copyType) {
+                const copyLabel = document.createElement('div');
+                copyLabel.className = 'copy-label';
+                copyLabel.textContent = `COPIA: ${copyType}`;
+                ticketDiv.appendChild(copyLabel);
+            }
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'ticket-header';
+            headerDiv.innerHTML = `
+                <strong>${'DELISH CHICKEN'}</strong><br>
+                <h1>TICKET N° ${String(datos.numero_ticket).padStart(6, '0')}</h1>
+                <div>${new Date(datos.fecha_creacion).toLocaleString()}</div>
+            `;
+            ticketDiv.appendChild(headerDiv);
+
+            const itemsContainer = document.createElement('div');
+            if (datos.pedidos && datos.pedidos.length > 0) {
+                datos.pedidos.forEach(pedido => {
+                    if (pedido.detalles && pedido.detalles.length > 0) {
+                        pedido.detalles.forEach(item => {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'item';
+
+                            // Usar el objeto de productos para obtener el nombre
+                            const nombreProducto = productos[item.id_producto] || `Producto ${item.id_producto}`;
+
+                            itemDiv.innerHTML = `
+                                <span>${nombreProducto} : cantidad ${item.cantidad}</span>
+                                <span>${item.subtotal.toFixed(2)} Bs</span>
+                            `;
+                            itemsContainer.appendChild(itemDiv);
+                        });
+                    }
+                });
+            } else {
+                itemsContainer.innerHTML = '<p>No hay items en el ticket.</p>';
+            }
+
+            ticketDiv.appendChild(itemsContainer);
+
+            const totalesContainer = document.createElement('div');
+            totalesContainer.className = 'total';
+            const totalPedido = datos.pedidos.reduce((acc, pedido) => acc + pedido.total, 0);
+            totalesContainer.innerHTML = `
+                <strong>Total: ${totalPedido.toFixed(2)} Bs</strong>
+            `;
+            ticketDiv.appendChild(totalesContainer);
+
+            return ticketDiv;
+        }
+        // function crearTicket(datos, copyType) {
+        //     const ticketDiv = document.createElement('div');
+        //     ticketDiv.className = 'ticket';
+
+        //     if(copyType) {
+        //         const copyLabel = document.createElement('div');
+        //         copyLabel.className = 'copy-label';
+        //         copyLabel.textContent = `COPIA: ${copyType}`;
+        //         ticketDiv.appendChild(copyLabel);
+        //     }
+
+        //     const headerDiv = document.createElement('div');
+        //     headerDiv.className = 'ticket-header';
+        //     headerDiv.innerHTML = `
+        //         <strong>${datos.descripcion || 'DELISH CHICKEN'}</strong><br>
+        //         <h1>TICKET N° ${String(datos.numero_ticket).padStart(6, '0')}</h1>
+        //         <div>${new Date(datos.fecha_creacion).toLocaleString()}</div>
+        //     `;
+        //     ticketDiv.appendChild(headerDiv);
+
+        //     const itemsContainer = document.createElement('div');
+        //     if (datos.pedidos && datos.pedidos.length > 0) {
+        //         datos.pedidos.forEach(pedido => {
+        //             if (pedido.detalles && pedido.detalles.length > 0) {
+        //                 pedido.detalles.forEach(item => {
+        //                     const itemDiv = document.createElement('div');
+        //                     itemDiv.className = 'item';
+        //                     itemDiv.innerHTML = `
+        //                         <span>Producto ID: ${item.id_producto} : cantidad ${item.cantidad}</span>
+        //                         <span>${item.subtotal.toFixed(2)} Bs</span>
+        //                     `;
+        //                     itemsContainer.appendChild(itemDiv);
+        //                 });
+        //             }
+        //         });
+        //     } else {
+        //         itemsContainer.innerHTML = '<p>No hay items en el ticket.</p>';
+        //     }
+
+        //     ticketDiv.appendChild(itemsContainer);
+
+        //     const totalesContainer = document.createElement('div');
+        //     totalesContainer.className = 'total';
+        //     const totalPedido = datos.pedidos.reduce((acc, pedido) => acc + pedido.total, 0);
+        //     totalesContainer.innerHTML = `
+        //         <strong>Total: ${totalPedido.toFixed(2)} Bs</strong>
+        //     `;
+        //     ticketDiv.appendChild(totalesContainer);
+
+        //     return ticketDiv;
+        // }
+
+        async function cargarTickets() {
+            const container = document.getElementById('tickets-container');
+            container.innerHTML = '<p>Cargando último ticket...</p>';
+
+            const ticketData = await obtenerUltimoTicket();
+
+            console.log('Datos del ticket:', ticketData);
+
+            if (ticketData.error) {
+                container.innerHTML = `<p class="error">${ticketData.message}</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            const ticketCocina = crearTicket(ticketData, 'COCINA');
+            container.appendChild(ticketCocina);
+            const ticketCliente = crearTicket(ticketData, 'CLIENTE');
+            container.appendChild(ticketCliente);
+
+            setTimeout(() => {
+                if (window.location.search.includes('autoprint')) {
+                    imprimirTicket();
+                }
+            }, 500);
+        }
+
+        function imprimirTicket() {
+            window.print();
+        }
+
+        // Cargar tickets al inicio
+        cargarTickets();
+    </script>
+</body>
+
+</html>
