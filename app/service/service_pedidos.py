@@ -2,15 +2,14 @@ from typing import List
 from fastapi import Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, cast, Date
-from datetime import date
+from datetime import date, datetime, timedelta
 from models.model_ticket import Ticket
 from models.model_pedidos import Pedido, EstadoPedido
 from models.model_detalles_pedidos import DetallePedido
 from schemas.schema_ticket import TicketCreate
-from datetime import date
 from models.model_producto import Producto
 from schemas.schema_pedido import PedidoOut, DetallePedidoOut  # Asegúrate de que los esquemas estén importados
-
+import locale
 def crear_ticket_con_pedidos(ticket_data: TicketCreate, db: Session) -> Ticket:
     # Obtener el último número de ticket
     ultimo_numero = db.query(func.max(Ticket.numero_ticket)).scalar()
@@ -83,15 +82,15 @@ def obtener_pedidos(db: Session):
 
 def obtener_total_ventas_dia(db: Session):
     hoy = date.today()
-    total = (
-        db.query(func.coalesce(func.sum(Pedido.total), 0))
+    cantidad = (
+        db.query(func.count(Pedido.id_pedido))
         .filter(
             Pedido.estado == EstadoPedido.Terminado,
             cast(Pedido.fecha_hora, Date) == hoy
         )
         .scalar()
     )
-    return float(total)
+    return int(cantidad)
 
 def obtener_producto_mas_vendido(db: Session):
     hoy = date.today()
@@ -138,35 +137,71 @@ def tabla_pedidos_actuales_por_Aceptar(db: Session):
     )
     return pedidos
 
-def hora_pico_ventas(db: Session, fecha: date):
+def hora_pico_ventas(db: Session):
+    fecha = date.today()
+    
     resultado = (
         db.query(
-            func.hour(Pedido.fecha_hora).label("hora"),
+            func.extract('hour', Pedido.fecha_hora).label("hora"),
             func.count(Pedido.id_pedido).label("cantidad_ventas")
         )
         .filter(
             Pedido.estado == EstadoPedido.Terminado,
             cast(Pedido.fecha_hora, Date) == fecha
         )
-        .group_by(func.hour(Pedido.fecha_hora))
+        .group_by(func.extract('hour', Pedido.fecha_hora))
         .order_by(func.count(Pedido.id_pedido).desc())
         .first()
     )
-    return resultado
+    
+    if resultado:
+        # Convertir la hora en entero a formato 12h con AM/PM
+        hora_dt = datetime.strptime(str(int(resultado.hora)), "%H")
+        hora_formateada = hora_dt.strftime("%I:00 %p")
+        
+        return {
+            "hora": hora_formateada,
+            "cantidad_ventas": resultado.cantidad_ventas
+        }
+    else:
+        return None
 
-def grafico_ganancias_mes(db: Session, fecha: date):
-    resultado = (
+def ventas_semana(db: Session):
+    hoy = date.today()
+    
+    # Ajustamos para iniciar en el lunes de esta semana
+    inicio_semana = hoy - timedelta(days=hoy.weekday())  # lunes
+    fin_semana = inicio_semana + timedelta(days=6)       # domingo
+
+    resultados = (
         db.query(
-            func.month(Pedido.fecha_hora).label("mes"),
-            func.sum(Pedido.total).label("ganancia_total")
+            cast(Pedido.fecha_hora, Date).label("dia"),
+            func.count(Pedido.id_pedido).label("cantidad_ventas")
         )
         .filter(
             Pedido.estado == EstadoPedido.Terminado,
-            cast(Pedido.fecha_hora, Date) == fecha
+            cast(Pedido.fecha_hora, Date) >= inicio_semana,
+            cast(Pedido.fecha_hora, Date) <= fin_semana
         )
-        .group_by(func.month(Pedido.fecha_hora))
-        .order_by(func.month(Pedido.fecha_hora))
+        .group_by(cast(Pedido.fecha_hora, Date))
+        .order_by(cast(Pedido.fecha_hora, Date))
         .all()
     )
-    return resultado
 
+    # Convertimos resultados a diccionario {fecha: cantidad}
+    dias = {r.dia: r.cantidad_ventas for r in resultados}
+
+    labels = []
+    data = []
+
+    locale.setlocale(locale.LC_TIME, 'Spanish_Spain') # Esto puede variar por sistema operativo
+
+    for i in range(7):
+        dia = inicio_semana + timedelta(days=i)
+        labels.append(dia.strftime('%A').capitalize())  # Lunes, Martes, etc.
+        data.append(dias.get(dia, 0))
+
+    return {
+        "labels": labels,
+        "data": data
+    }

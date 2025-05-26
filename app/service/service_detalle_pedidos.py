@@ -71,7 +71,6 @@ def obtener_top_productos_mas_vendidos(db: Session, limite: int = 5):
     hoy = date.today()
     inicio_dia = datetime.combine(hoy, datetime.min.time()) 
     fin_dia = datetime.combine(hoy + timedelta(days=1), datetime.min.time())  
-    print("Hora del sistema:", datetime.now())
     resultados = (
         db.query(
             Producto.nombre.label("nombre"),
