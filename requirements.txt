@@ -9,3 +9,5 @@ alembic
 python-dotenv
 pymysql
 pydantic-settings
+itsdangerous
+python-multipart
