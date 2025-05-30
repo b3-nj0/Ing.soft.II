@@ -42,3 +42,8 @@ class PedidoCreate(BaseModel):
     estado: EstadoPedido = EstadoPedido.Pendiente
     total: Decimal
     detalles: List[DetallePedidoCreate]
+    
+class ProductoMasVendidoMes(BaseModel):
+    nombre: str
+    imagen: str
+    cantidad_vendida: int

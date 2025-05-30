@@ -12,19 +12,19 @@ from routes.ticket_route import ticket_routes
 from routes.usuario_routes import usuario
 
 
-app = FastAPI()
+main = FastAPI()
 
-app.add_middleware(SessionMiddleware, secret_key=settings_objeto.SECRET_KEY)
+main.add_middleware(SessionMiddleware, secret_key=settings_objeto.SECRET_KEY)
 
-setup_cors(app)
+setup_cors(main)
 
 
-app.include_router(usuario)
-app.include_router(detalle_pedido_route)
-app.include_router(pedidos_route)
-app.include_router(producto_route)
-# app.include_router(ticket_diario_route)
-app.include_router(ticket_routes)
+main.include_router(usuario)
+main.include_router(detalle_pedido_route)
+main.include_router(pedidos_route)
+main.include_router(producto_route)
+# main.include_router(ticket_diario_route)
+main.include_router(ticket_routes)
 
 # Dependency para obtener la DB session
 

@@ -5,9 +5,9 @@ from sqlalchemy.orm import Session
 
 from config.database import get_db
 from schemas.schema_ticket import TicketOut, TicketCreate
-from schemas.schema_pedido import OrdenCocinaSchema, EstadoUpdateResponse, PedidoOut
-from service.service_pedidos import hora_pico_ventas, ventas_semana
-from service.service_pedidos import crear_ticket_con_pedidos, obtener_pedidos, obtener_total_ventas_dia, obtener_producto_mas_vendido, cantidad_ganancia_dia,tabla_pedidos_actuales_por_Aceptar
+from schemas.schema_pedido import OrdenCocinaSchema, EstadoUpdateResponse, PedidoOut, ProductoMasVendidoMes
+from service.service_pedidos import hora_pico_ventas, ventas_semana,table_obtener_productos_pendientes
+from service.service_pedidos import crear_ticket_con_pedidos, obtener_pedidos, obtener_total_ventas_dia, obtener_producto_mas_vendido, cantidad_ganancia_dia, obtener_producto_mas_vendido_mes
 from service.service_ticket_diario import obtener_ordenes_cocina , cambiar_estado_pedido , cambiar_estado_pedido_cancelado
 
 pedidos_route = APIRouter()
@@ -51,7 +51,7 @@ def ganancia_dia(db: Session = Depends(get_db)):
 
 @pedidos_route.get("/tabla-pedidos-actuales")
 def pedidos_por_Aceptar(db: Session = Depends(get_db)):
-    return tabla_pedidos_actuales_por_Aceptar(db)
+    return table_obtener_productos_pendientes(db)
 
 @pedidos_route.get("/hora-pico-ventas")
 def hora_pico(db: Session = Depends(get_db)):
@@ -60,3 +60,6 @@ def hora_pico(db: Session = Depends(get_db)):
 @pedidos_route.get("/ventas/semana")
 def obtener_ventas_semana(db: Session = Depends(get_db)):
     return ventas_semana(db)
+@pedidos_route.get("/producto-mas-vendido-mes", response_model=ProductoMasVendidoMes)
+def producto_mas_vendido_mes(db: Session = Depends(get_db)):
+    return obtener_producto_mas_vendido_mes(db)

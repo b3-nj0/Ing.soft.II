@@ -9,7 +9,7 @@ class CategoriaEnum(str, enum.Enum):
     
 class Producto(Base):
     __tablename__ = "productos"
-
+    __table_args__ = {'extend_existing': True}
     id_producto = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(50))
     descripcion = Column(Text)

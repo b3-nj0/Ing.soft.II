@@ -3,7 +3,7 @@ from config.database import Base
 
 class Usuario(Base):
     __tablename__ = "usuario"
-
+    __table_args__ = {'extend_existing': True}
     id_usuario = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(50))
     telefono = Column(String(15))

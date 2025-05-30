@@ -4,7 +4,7 @@ from config.database import Base
 
 class DetallePedido(Base):
     __tablename__ = "detalle_pedidos"
-
+    __table_args__ = {'extend_existing': True}
     id_detalle = Column(Integer, primary_key=True, index=True)
     id_pedido = Column(Integer, ForeignKey("pedidos.id_pedido"))
     id_producto = Column(Integer, ForeignKey("productos.id_producto"))

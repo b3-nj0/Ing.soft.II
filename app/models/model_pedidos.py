@@ -11,7 +11,7 @@ class EstadoPedido(str, enum.Enum):
 
 class Pedido(Base):
     __tablename__ = "pedidos"
-
+    __table_args__ = {'extend_existing': True}
     id_pedido = Column(Integer, primary_key=True, index=True)
     id_ticket = Column(Integer, ForeignKey("tickets.id_ticket"))
     estado = Column(Enum(EstadoPedido), default=EstadoPedido.Pendiente)

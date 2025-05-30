@@ -4,7 +4,7 @@ from config.database import Base
 
 class Ticket(Base):
     __tablename__ = "tickets"
-
+    __table_args__ = {'extend_existing': True}
     id_ticket = Column(Integer, primary_key=True, index=True)
     numero_ticket = Column(Integer)
     descripcion = Column(Text)

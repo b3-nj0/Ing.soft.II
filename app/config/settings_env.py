@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     ENV: str = "development"
     FRONTEND_ORIGINS: str 
     ASSET_URL: str
-
+    DATABASE_URL_TEST: str 
     model_config = SettingsConfigDict(env_file=".env")  
     
     #  esto se si la version de pydantic se kga 

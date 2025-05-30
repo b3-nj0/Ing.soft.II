@@ -129,13 +129,32 @@ def cantidad_ganancia_dia(db: Session):
     )
     return float(total)
 
-def tabla_pedidos_actuales_por_Aceptar(db: Session):
-    pedidos = (
-        db.query(Pedido)
-        .filter(Pedido.estado == EstadoPedido.EnPreparacion)
+def table_obtener_productos_pendientes(db: Session):
+    resultados = (
+        db.query(
+            Producto.id_producto,
+            Producto.nombre,
+            Producto.imagen,
+            func.sum(DetallePedido.cantidad).label("cantidad_pendiente")
+        )
+        .join(DetallePedido, DetallePedido.id_producto == Producto.id_producto)
+        .join(Pedido, Pedido.id_pedido == DetallePedido.id_pedido)
+        .filter(
+            Pedido.estado == EstadoPedido.Pendiente
+        )
+        .group_by(Producto.id_producto)
+        .order_by(func.sum(DetallePedido.cantidad).desc())
         .all()
     )
-    return pedidos
+    return [
+        {
+            "id_producto": r.id_producto,
+            "nombre": r.nombre,
+            "imagen": r.imagen,
+            "cantidad_pendiente": r.cantidad_pendiente
+        }
+        for r in resultados
+    ]
 
 def hora_pico_ventas(db: Session):
     fecha = date.today()
@@ -205,3 +224,32 @@ def ventas_semana(db: Session):
         "labels": labels,
         "data": data
     }
+
+def obtener_producto_mas_vendido_mes(db: Session):
+    hoy = date.today()
+    primer_dia_mes = hoy.replace(day=1)
+    resultado = (
+        db.query(
+            Producto.nombre,
+            Producto.imagen,
+            func.sum(DetallePedido.cantidad).label("cantidad_vendida")
+        )
+        .join(DetallePedido, DetallePedido.id_producto == Producto.id_producto)
+        .join(Pedido, Pedido.id_pedido == DetallePedido.id_pedido)
+        .filter(
+            Pedido.estado == EstadoPedido.Terminado,
+            cast(Pedido.fecha_hora, Date) >= primer_dia_mes,
+            cast(Pedido.fecha_hora, Date) <= hoy
+        )
+        .group_by(Producto.id_producto)
+        .order_by(func.sum(DetallePedido.cantidad).desc())
+        .first()
+    )
+    if resultado:
+        return {
+            "nombre": resultado.nombre,
+            "imagen": resultado.imagen,
+            "cantidad_vendida": resultado.cantidad_vendida
+        }
+    else:
+        return None
